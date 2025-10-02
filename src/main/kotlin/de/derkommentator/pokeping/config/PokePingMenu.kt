@@ -7,7 +7,7 @@ import net.minecraft.client.gui.screen.Screen
 import net.minecraft.text.Text
 
 class PokePingMenu : ModMenuApi {
-    override fun getModConfigScreenFactory(): ConfigScreenFactory<*>? {
+    override fun getModConfigScreenFactory(): ConfigScreenFactory<*> {
         return ConfigScreenFactory { parent: Screen ->
             val localConfig = ConfigManager.config
 
@@ -27,7 +27,7 @@ class PokePingMenu : ModMenuApi {
 
             general.addEntry(
                 entryBuilder.startStrList(
-                    Text.literal("Beobachtete Pokémon"),
+                    Text.literal("Pokémon Liste"),
                     localConfig.species.toMutableList()
                 )
                     .setDefaultValue(listOf())

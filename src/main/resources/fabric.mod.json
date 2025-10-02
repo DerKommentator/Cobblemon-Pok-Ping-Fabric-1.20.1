@@ -9,11 +9,11 @@
   ],
   "contact": {
     "homepage": "https://github.com/DerKommentator",
-    "sources": "https://github.com/DerKommentator"
+    "sources": "https://github.com/DerKommentator/Cobblemon-Pok-Ping-Fabric-1.20.1"
   },
   "license": "MIT",
   "icon": "assets/pokeping/icon.png",
-  "environment": "*",
+  "environment": "client",
   "entrypoints": {
     "main": [
       {
