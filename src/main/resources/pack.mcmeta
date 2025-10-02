@@ -1,0 +1,6 @@
+{
+  "pack": {
+    "description": "Notification of Pokémon spawns via chat and Discord",
+    "pack_format": 9
+  }
+}

@@ -1,0 +1,40 @@
+{
+  "schemaVersion": 1,
+  "id": "pokeping",
+  "version": "${version}",
+  "name": "PokéPing",
+  "description": "Notification of Pokémon spawns via chat and Discord",
+  "authors": [
+    "DerKommentator"
+  ],
+  "contact": {
+    "homepage": "https://github.com/DerKommentator",
+    "sources": "https://github.com/DerKommentator"
+  },
+  "license": "MIT",
+  "icon": "assets/pokeping/icon.png",
+  "environment": "*",
+  "entrypoints": {
+    "main": [
+      {
+        "adapter": "kotlin",
+        "value": "de.derkommentator.pokeping.PokePing"
+      }
+    ],
+    "modmenu": [
+      "de.derkommentator.pokeping.config.PokePingMenu"
+    ]
+  },
+  "depends": {
+    "java": ">=17",
+    "minecraft": ">=1.20.1",
+    "fabricloader": ">=0.16.14",
+    "fabric-language-kotlin": ">=1.13.2+kotlin.2.1.20",
+    "fabric": "*",
+    "cobblemon": ">=1.5.2"
+  },
+  "suggests": {
+    "cloth-config2": ">=11.1.136",
+    "modmenu": ">=7.2.2"
+  }
+}
