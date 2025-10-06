@@ -17,17 +17,18 @@ import kotlin.math.round
 object PokePing : ModInitializer {
     //const val MOD_ID = "pokeping"
     private val logger = LoggerFactory.getLogger("PokePing")
+    private val executor = Executors.newSingleThreadExecutor()
     private var cfg = PokePingConfig()
 
     override fun onInitialize() {
         logger.info("PokePing geladen!")
 
         ConfigManager.load()
-        logger.info("Config geladen: ${ConfigManager.config}")
         cfg = ConfigManager.config
-        if (!cfg.modEnabled) return
+        logger.info("Config geladen: $cfg")
 
         ClientEntityEvents.ENTITY_LOAD.register { entity, world ->
+            if (!cfg.modEnabled) return@register
 //            val clientUuid = MinecraftClient.getInstance().player?.uuid
 
             if (entity is PokemonEntity) {
@@ -77,8 +78,6 @@ object PokePing : ModInitializer {
         cfg = ConfigManager.config
         sendMessage("§7[PokéPing]§r Config neu geladen!")
     }
-
-    private val executor = Executors.newSingleThreadExecutor()
 
     private fun sendDiscordWebhook(urlString: String, username: String, message: String) {
         executor.submit {
@@ -149,6 +148,4 @@ object PokePing : ModInitializer {
         val mc = MinecraftClient.getInstance()
         mc.inGameHud?.chatHud?.addMessage(Text.literal(message))
     }
-
-
 }
