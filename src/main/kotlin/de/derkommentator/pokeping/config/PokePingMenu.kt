@@ -2,9 +2,15 @@ package de.derkommentator.pokeping.config
 
 import com.terraformersmc.modmenu.api.ConfigScreenFactory
 import com.terraformersmc.modmenu.api.ModMenuApi
+import de.derkommentator.pokeping.PokePing.reloadConfig
 import me.shedaniel.clothconfig2.api.ConfigBuilder
 import net.minecraft.client.gui.screen.Screen
 import net.minecraft.text.Text
+
+enum class DiscordMessageMode(name: String) {
+    Text("Text"),
+    Embed("Embed"),
+}
 
 class PokePingMenu : ModMenuApi {
     override fun getModConfigScreenFactory(): ConfigScreenFactory<*> {
@@ -46,6 +52,13 @@ class PokePingMenu : ModMenuApi {
             )
 
             discord.addEntry(
+                entryBuilder.startEnumSelector(Text.literal("Art der Benachrichtigung"),DiscordMessageMode::class.java, ConfigManager.config.discord.messageMode)
+                    .setDefaultValue(DiscordMessageMode.Embed)
+                    .setSaveConsumer { newMode -> localConfig.discord.messageMode = newMode}
+                    .build()
+            )
+
+            discord.addEntry(
                 entryBuilder.startStrField(Text.literal("Webhook URL"), ConfigManager.config.discord.webhookUrl)
                     .setDefaultValue("")
                     .setSaveConsumer { newWebhookUrl -> localConfig.discord.webhookUrl = newWebhookUrl}
@@ -61,7 +74,7 @@ class PokePingMenu : ModMenuApi {
 
             builder.setSavingRunnable {
                 ConfigManager.saveLocalConfig(localConfig)
-                ConfigManager.load()
+                reloadConfig()
             }
 
             builder.build()

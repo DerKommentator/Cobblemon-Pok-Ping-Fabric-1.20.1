@@ -1,12 +1,13 @@
 package de.derkommentator.pokeping
 
-import com.cobblemon.mod.common.Cobblemon
+import net.minecraft.text.Text
 import com.cobblemon.mod.common.entity.pokemon.PokemonEntity
 import de.derkommentator.pokeping.config.ConfigManager
+import de.derkommentator.pokeping.config.DiscordMessageMode
+import de.derkommentator.pokeping.config.PokePingConfig
 import net.fabricmc.api.ModInitializer
 import net.fabricmc.fabric.api.client.event.lifecycle.v1.ClientEntityEvents
 import net.minecraft.client.MinecraftClient
-import net.minecraft.text.Text
 import org.slf4j.LoggerFactory
 import java.net.HttpURLConnection
 import java.net.URL
@@ -16,18 +17,18 @@ import kotlin.math.round
 object PokePing : ModInitializer {
     //const val MOD_ID = "pokeping"
     private val logger = LoggerFactory.getLogger("PokePing")
-    //private val announcedSpawns = ConcurrentHashMap.newKeySet<Pokemon>()
+    private var cfg = PokePingConfig()
 
     override fun onInitialize() {
         logger.info("PokePing geladen!")
 
         ConfigManager.load()
         logger.info("Config geladen: ${ConfigManager.config}")
-        val cfg = ConfigManager.config
+        cfg = ConfigManager.config
+        if (!cfg.modEnabled) return
 
         ClientEntityEvents.ENTITY_LOAD.register { entity, world ->
-            if (!cfg.modEnabled) return@register
-            val clientUuid = MinecraftClient.getInstance().player?.uuid
+//            val clientUuid = MinecraftClient.getInstance().player?.uuid
 
             if (entity is PokemonEntity) {
                 val pokemon = entity.pokemon
@@ -37,9 +38,9 @@ object PokePing : ModInitializer {
                 //logger.info("Pokemon Spawn: $pokemonName at ${round(pos.x)}, ${round(pos.y)}, ${round(pos.z)}")
 
                 // Check if pokemon is in team
-                if (clientUuid == null) return@register
-                val myParty = Cobblemon.storage.getParty(clientUuid)
-                if (myParty.any { it.species.name == pokemon.species.name }) return@register
+//                if (clientUuid == null) return@register
+//                val myParty = Cobblemon.storage.getParty(clientUuid)
+//                if (myParty.any { it.species.name == pokemon.species.name }) return@register
 
                 if (!cfg.species.contains(pokemonName)) return@register
 
@@ -48,10 +49,33 @@ object PokePing : ModInitializer {
                 sendMessage("§7[PokéPing]§r §a${pokemon.species.translatedName.string}§r ist bei ${round(pos.x)}, ${round(pos.y)}, ${round(pos.z)} gespawnt!")
 
                 if (cfg.discord.enabled && cfg.discord.webhookUrl.isNotBlank()) {
-                    sendDiscordWebhook(cfg.discord.webhookUrl, cfg.discord.username, message)
+                    when (cfg.discord.messageMode) {
+                        DiscordMessageMode.Text -> {
+                            sendDiscordWebhook(cfg.discord.webhookUrl, cfg.discord.username, message)
+                        }
+                        DiscordMessageMode.Embed -> {
+                            val name = pokemon.species.translatedName.string
+                            val coords = "${round(pos.x)}, ${round(pos.y)}, ${round(pos.z)}"
+                            val imageUrl = "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/${pokemon.species.nationalPokedexNumber}.png"
+                            sendDiscordEmbedWebhook(
+                                cfg.discord.webhookUrl,
+                                cfg.discord.username,
+                                "Pokémon Spawn!",
+                                "**$name** ist bei $coords gespawnt!",
+                                imageUrl
+                            )
+                        }
+                    }
                 }
             }
         }
+    }
+
+    fun reloadConfig() {
+        ConfigManager.load()
+        logger.info("Config neu geladen!")
+        cfg = ConfigManager.config
+        sendMessage("§7[PokéPing]§r Config neu geladen!")
     }
 
     private val executor = Executors.newSingleThreadExecutor()
@@ -80,8 +104,51 @@ object PokePing : ModInitializer {
         }
     }
 
+    private fun sendDiscordEmbedWebhook(urlString: String, username: String, title: String, description: String, imageUrl: String?) {
+        executor.submit {
+            try {
+                val url = URL(urlString)
+                val conn = url.openConnection() as HttpURLConnection
+                conn.requestMethod = "POST"
+                conn.setRequestProperty("Content-Type", "application/json")
+                conn.doOutput = true
+
+                val embed = buildString {
+                    append("{")
+                    append("\"title\": \"$title\",")
+                    append("\"description\": \"$description\"")
+                    if (imageUrl != null && imageUrl.isNotBlank()) {
+                        append(",\"thumbnail\": { \"url\": \"$imageUrl\" }")
+                    }
+                    append("}")
+                }
+
+                val json = """
+                {
+                  "username": "$username",
+                  "embeds": [ $embed ]
+                }
+            """.trimIndent()
+
+                conn.outputStream.use { os ->
+                    os.write(json.toByteArray(Charsets.UTF_8))
+                }
+
+                val responseCode = conn.responseCode
+                if (responseCode !in listOf(200, 204)) {
+                    logger.error("Discord Webhook Embed fehlgeschlagen: HTTP $responseCode")
+                }
+            } catch (ex: Exception) {
+                logger.error("Fehler beim Senden des Embeds an Discord", ex)
+            }
+        }
+    }
+
+
     fun sendMessage(message: String) {
         val mc = MinecraftClient.getInstance()
         mc.inGameHud?.chatHud?.addMessage(Text.literal(message))
     }
+
+
 }

@@ -6,7 +6,8 @@ import java.io.File
 data class DiscordConfig(
     var enabled: Boolean = false,
     var webhookUrl: String = "",
-    var username: String = "PokePing"
+    var username: String = "PokePing",
+    var messageMode: DiscordMessageMode = DiscordMessageMode.Embed
 )
 
 data class PokePingConfig(
