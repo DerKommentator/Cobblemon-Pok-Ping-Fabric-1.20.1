@@ -1,0 +1,17 @@
+{
+    "pokeping.notification.spawnMessageChat": "§7[PokéPing]§r §a%d§r spawned at %d, %d, %d!",
+    "pokeping.notification.spawnMessageDiscordText": "**%d** spawned at %d, %d, %d!",
+    "pokeping.notification.spawnMessageDiscordEmbedTitle": "Pokémon Spawn!",
+    "pokeping.notification.spawnMessageDiscordEmbedDesc": "**%d** spawned at %d, %d, %d!",
+    "pokeping.notification.reloadedConfig": "§7[PokéPing]§r Config reloaded!",
+
+    "pokeping.config.title": "PokéPing Config",
+    "pokeping.config.generalCategoryTitle": "General",
+    "pokeping.config.modEnabled": "Mod enabled",
+    "pokeping.config.pokemonList": "Pokémon List",
+    "pokeping.config.discordCategoryTitle": "Discord",
+    "pokeping.config.discordEnabled": "Discord notification enabled",
+    "pokeping.config.discordNotificationMode": "Notification Mode",
+    "pokeping.config.discordWebhookUrl": "Webhook URL",
+    "pokeping.config.discordWebhookUsername": "Username"
+}

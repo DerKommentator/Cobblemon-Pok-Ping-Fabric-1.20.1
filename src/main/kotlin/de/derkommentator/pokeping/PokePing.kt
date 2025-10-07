@@ -15,17 +15,17 @@ import java.util.concurrent.Executors
 import kotlin.math.round
 
 object PokePing : ModInitializer {
-    //const val MOD_ID = "pokeping"
+    const val MOD_ID = "pokeping"
     private val logger = LoggerFactory.getLogger("PokePing")
     private val executor = Executors.newSingleThreadExecutor()
     private var cfg = PokePingConfig()
 
     override fun onInitialize() {
-        logger.info("PokePing geladen!")
+        logger.info("Loaded PokePing!")
 
         ConfigManager.load()
         cfg = ConfigManager.config
-        logger.info("Config geladen: $cfg")
+        logger.info("Loaded Config: $cfg")
 
         ClientEntityEvents.ENTITY_LOAD.register { entity, world ->
             if (!cfg.modEnabled) return@register
@@ -45,24 +45,26 @@ object PokePing : ModInitializer {
 
                 if (!cfg.species.contains(pokemonName)) return@register
 
-                val message = "**${pokemon.species.translatedName.string}** bei ${round(pos.x)}, ${round(pos.y)}, ${round(pos.z)} gespawnt!"
+                val translatedName = pokemon.species.translatedName.string
+                //val message = "**${pokemon.species.translatedName.string}** bei ${round(pos.x)}, ${round(pos.y)}, ${round(pos.z)} gespawnt!"
                 // logger.info(message)
-                sendMessage("§7[PokéPing]§r §a${pokemon.species.translatedName.string}§r ist bei ${round(pos.x)}, ${round(pos.y)}, ${round(pos.z)} gespawnt!")
+                sendMessage(Text.translatable("$MOD_ID.notification.spawnMessageChat", translatedName, round(pos.x), round(pos.y), round(pos.z)))
 
                 if (cfg.discord.enabled && cfg.discord.webhookUrl.isNotBlank()) {
                     when (cfg.discord.messageMode) {
                         DiscordMessageMode.Text -> {
+                            val message = Text.translatable("$MOD_ID.notification.spawnMessageDiscordText", translatedName, round(pos.x), round(pos.y), round(pos.z)).asString()
                             sendDiscordWebhook(cfg.discord.webhookUrl, cfg.discord.username, message)
                         }
                         DiscordMessageMode.Embed -> {
-                            val name = pokemon.species.translatedName.string
-                            val coords = "${round(pos.x)}, ${round(pos.y)}, ${round(pos.z)}"
+                            val title = Text.translatable("$MOD_ID.notification.spawnMessageDiscordEmbedTitle").asString()
+                            val desc = Text.translatable("$MOD_ID.notification.spawnMessageDiscordEmbedDesc", translatedName, round(pos.x), round(pos.y), round(pos.z)).asString()).asString()
                             val imageUrl = "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/${pokemon.species.nationalPokedexNumber}.png"
                             sendDiscordEmbedWebhook(
                                 cfg.discord.webhookUrl,
                                 cfg.discord.username,
-                                "Pokémon Spawn!",
-                                "**$name** ist bei $coords gespawnt!",
+                                title,
+                                desc,
                                 imageUrl
                             )
                         }
@@ -74,9 +76,9 @@ object PokePing : ModInitializer {
 
     fun reloadConfig() {
         ConfigManager.load()
-        logger.info("Config neu geladen!")
+        logger.info("Reloaded Config!")
         cfg = ConfigManager.config
-        sendMessage("§7[PokéPing]§r Config neu geladen!")
+        sendMessage(Text.translatable("$MOD_ID.notification.reloadedConfig"))
     }
 
     private fun sendDiscordWebhook(urlString: String, username: String, message: String) {
@@ -95,10 +97,10 @@ object PokePing : ModInitializer {
 
                 val responseCode = conn.responseCode
                 if (responseCode !in listOf(200, 204)) {
-                    logger.error("Discord Webhook fehlgeschlagen: HTTP $responseCode")
+                    logger.error("Failed discord webhook for text: HTTP $responseCode")
                 }
             } catch (ex: Exception) {
-                logger.error("Fehler beim Senden an Discord", ex)
+                logger.error("Error sending text message to discord", ex)
             }
         }
     }
@@ -135,17 +137,17 @@ object PokePing : ModInitializer {
 
                 val responseCode = conn.responseCode
                 if (responseCode !in listOf(200, 204)) {
-                    logger.error("Discord Webhook Embed fehlgeschlagen: HTTP $responseCode")
+                    logger.error("Failed discord webhook for embed: HTTP $responseCode")
                 }
             } catch (ex: Exception) {
-                logger.error("Fehler beim Senden des Embeds an Discord", ex)
+                logger.error("Error sending embed message to discord", ex)
             }
         }
     }
 
 
-    fun sendMessage(message: String) {
+    fun sendMessage(text: Text) {
         val mc = MinecraftClient.getInstance()
-        mc.inGameHud?.chatHud?.addMessage(Text.literal(message))
+        mc.inGameHud?.chatHud?.addMessage(text)
     }
 }

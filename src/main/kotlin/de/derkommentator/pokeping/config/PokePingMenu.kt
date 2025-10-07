@@ -19,13 +19,13 @@ class PokePingMenu : ModMenuApi {
 
             val builder = ConfigBuilder.create()
                 .setParentScreen(parent)
-                .setTitle(Text.literal("PokePing Config"))
+                .setTitle(Text.translatable("${PokePing.MOD_ID}.config.title"))
 
             val entryBuilder = builder.entryBuilder()
-            val general = builder.getOrCreateCategory(Text.literal("Allgemein"))
+            val general = builder.getOrCreateCategory(Text.translatable("${PokePing.MOD_ID}.config.generalCategoryTitle"))
 
             general.addEntry(
-                entryBuilder.startBooleanToggle(Text.literal("Mod aktivieren"), ConfigManager.config.modEnabled)
+                entryBuilder.startBooleanToggle(Text.translatable("${PokePing.MOD_ID}.config.modEnabled"), ConfigManager.config.modEnabled)
                     .setDefaultValue(true)
                     .setSaveConsumer { newIsModEnabled -> localConfig.modEnabled = newIsModEnabled}
                     .build()
@@ -33,7 +33,7 @@ class PokePingMenu : ModMenuApi {
 
             general.addEntry(
                 entryBuilder.startStrList(
-                    Text.literal("Pokémon Liste"),
+                    Text.translatable("${PokePing.MOD_ID}.config.pokemonList"),
                     localConfig.species.toMutableList()
                 )
                     .setDefaultValue(listOf())
@@ -42,31 +42,31 @@ class PokePingMenu : ModMenuApi {
                     .build()
             )
 
-            val discord = builder.getOrCreateCategory(Text.literal("Discord"))
+            val discord = builder.getOrCreateCategory(Text.translatable("${PokePing.MOD_ID}.config.discordCategoryTitle"))
 
             discord.addEntry(
-                entryBuilder.startBooleanToggle(Text.literal("Discord aktivieren"), ConfigManager.config.discord.enabled)
+                entryBuilder.startBooleanToggle(Text.translatable("${PokePing.MOD_ID}.config.discordEnabled"), ConfigManager.config.discord.enabled)
                     .setDefaultValue(true)
                     .setSaveConsumer { newIsEnabled -> localConfig.discord.enabled = newIsEnabled}
                     .build()
             )
 
             discord.addEntry(
-                entryBuilder.startEnumSelector(Text.literal("Art der Benachrichtigung"),DiscordMessageMode::class.java, ConfigManager.config.discord.messageMode)
+                entryBuilder.startEnumSelector(Text.translatable("${PokePing.MOD_ID}.config.discordNotificationMode"), DiscordMessageMode::class.java, ConfigManager.config.discord.messageMode)
                     .setDefaultValue(DiscordMessageMode.Embed)
                     .setSaveConsumer { newMode -> localConfig.discord.messageMode = newMode}
                     .build()
             )
 
             discord.addEntry(
-                entryBuilder.startStrField(Text.literal("Webhook URL"), ConfigManager.config.discord.webhookUrl)
+                entryBuilder.startStrField(Text.translatable("${PokePing.MOD_ID}.config.discordWebhookUrl"), ConfigManager.config.discord.webhookUrl)
                     .setDefaultValue("")
                     .setSaveConsumer { newWebhookUrl -> localConfig.discord.webhookUrl = newWebhookUrl}
                     .build()
             )
 
             discord.addEntry(
-                entryBuilder.startStrField(Text.literal("Username"), ConfigManager.config.discord.username)
+                entryBuilder.startStrField(Text.translatable("${PokePing.MOD_ID}.config.discordWebhookUsername"), ConfigManager.config.discord.username)
                     .setDefaultValue("")
                     .setSaveConsumer { newUsername -> localConfig.discord.username = newUsername}
                     .build()

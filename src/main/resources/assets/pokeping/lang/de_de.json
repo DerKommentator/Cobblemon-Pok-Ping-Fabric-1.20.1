@@ -1,0 +1,17 @@
+{
+    "pokeping.notification.spawnMessageChat": "§7[PokéPing]§r §a%d§r ist bei %d, %d, %d gespawnt!",
+    "pokeping.notification.spawnMessageDiscordText": "**%d** bei %d, %d, %d gespawnt!",
+    "pokeping.notification.spawnMessageDiscordEmbedTitle": "Pokémon Spawn!",
+    "pokeping.notification.spawnMessageDiscordEmbedDesc": "**%d** ist bei %d, %d, %d gespawnt!",
+    "pokeping.notification.reloadedConfig": "§7[PokéPing]§r Config neu geladen!",
+
+    "pokeping.config.title": "PokéPing Config",
+    "pokeping.config.generalCategoryTitle": "Allgemein",
+    "pokeping.config.modEnabled": "Mod aktivieren",
+    "pokeping.config.pokemonList": "Pokémon Liste",
+    "pokeping.config.discordCategoryTitle": "Discord",
+    "pokeping.config.discordEnabled": "Discord aktivieren",
+    "pokeping.config.discordNotificationMode": "Art der Benachrichtigung",
+    "pokeping.config.discordWebhookUrl": "Webhook URL",
+    "pokeping.config.discordWebhookUsername": "Username"
+}
