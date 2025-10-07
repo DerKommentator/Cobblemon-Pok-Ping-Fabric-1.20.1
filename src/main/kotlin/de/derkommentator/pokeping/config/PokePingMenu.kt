@@ -2,6 +2,7 @@ package de.derkommentator.pokeping.config
 
 import com.terraformersmc.modmenu.api.ConfigScreenFactory
 import com.terraformersmc.modmenu.api.ModMenuApi
+import de.derkommentator.pokeping.PokePing
 import de.derkommentator.pokeping.PokePing.reloadConfig
 import me.shedaniel.clothconfig2.api.ConfigBuilder
 import net.minecraft.client.gui.screen.Screen

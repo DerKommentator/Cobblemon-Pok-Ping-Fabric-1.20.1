@@ -53,12 +53,12 @@ object PokePing : ModInitializer {
                 if (cfg.discord.enabled && cfg.discord.webhookUrl.isNotBlank()) {
                     when (cfg.discord.messageMode) {
                         DiscordMessageMode.Text -> {
-                            val message = Text.translatable("$MOD_ID.notification.spawnMessageDiscordText", translatedName, round(pos.x), round(pos.y), round(pos.z)).asString()
+                            val message = Text.translatable("$MOD_ID.notification.spawnMessageDiscordText", translatedName, round(pos.x), round(pos.y), round(pos.z)).string
                             sendDiscordWebhook(cfg.discord.webhookUrl, cfg.discord.username, message)
                         }
                         DiscordMessageMode.Embed -> {
-                            val title = Text.translatable("$MOD_ID.notification.spawnMessageDiscordEmbedTitle").asString()
-                            val desc = Text.translatable("$MOD_ID.notification.spawnMessageDiscordEmbedDesc", translatedName, round(pos.x), round(pos.y), round(pos.z)).asString()).asString()
+                            val title = Text.translatable("$MOD_ID.notification.spawnMessageDiscordEmbedTitle").string
+                            val desc = Text.translatable("$MOD_ID.notification.spawnMessageDiscordEmbedDesc", translatedName, round(pos.x), round(pos.y), round(pos.z)).string
                             val imageUrl = "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/${pokemon.species.nationalPokedexNumber}.png"
                             sendDiscordEmbedWebhook(
                                 cfg.discord.webhookUrl,
