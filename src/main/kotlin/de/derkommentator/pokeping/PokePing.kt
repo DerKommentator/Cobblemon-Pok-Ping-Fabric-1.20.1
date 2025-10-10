@@ -5,19 +5,25 @@ import com.cobblemon.mod.common.entity.pokemon.PokemonEntity
 import de.derkommentator.pokeping.config.ConfigManager
 import de.derkommentator.pokeping.config.DiscordMessageMode
 import de.derkommentator.pokeping.config.PokePingConfig
+import de.derkommentator.pokeping.hud.HudOverlay
+import de.derkommentator.pokeping.spawning.BiomeSpawns
 import net.fabricmc.api.ModInitializer
-import net.fabricmc.fabric.api.client.event.lifecycle.v1.ClientEntityEvents
+import net.fabricmc.fabric.api.client.rendering.v1.HudRenderCallback
+import net.fabricmc.fabric.api.event.lifecycle.v1.ServerEntityEvents
+import net.fabricmc.fabric.api.event.lifecycle.v1.ServerLifecycleEvents
+import net.fabricmc.fabric.api.event.lifecycle.v1.ServerTickEvents
 import net.minecraft.client.MinecraftClient
 import org.slf4j.LoggerFactory
 import java.net.HttpURLConnection
 import java.net.URL
 import java.util.concurrent.Executors
+import java.util.concurrent.TimeUnit
 import kotlin.math.round
 
 object PokePing : ModInitializer {
     const val MOD_ID = "pokeping"
     private val logger = LoggerFactory.getLogger("PokePing")
-    private val executor = Executors.newSingleThreadExecutor()
+    private var executor = Executors.newSingleThreadExecutor()
     private var cfg = PokePingConfig()
 
     override fun onInitialize() {
@@ -27,7 +33,21 @@ object PokePing : ModInitializer {
         cfg = ConfigManager.config
         logger.info("Loaded Config: $cfg")
 
-        ClientEntityEvents.ENTITY_LOAD.register { entity, world ->
+        ServerLifecycleEvents.SERVER_STARTED.register {
+            ensureExecutor()
+            BiomeSpawns.register()
+        }
+
+        HudRenderCallback.EVENT.register(HudOverlay)
+
+        ServerTickEvents.END_SERVER_TICK.register { server ->
+            if (!cfg.biomeSpawn.enabled) return@register
+            for (player in server.playerManager.playerList) {
+                BiomeSpawns.onPlayerTick(player, cfg.biomeSpawn.bucketMode)
+            }
+        }
+
+        ServerEntityEvents.ENTITY_LOAD.register { entity, _ ->
             if (!cfg.modEnabled) return@register
 //            val clientUuid = MinecraftClient.getInstance().player?.uuid
 
@@ -43,7 +63,7 @@ object PokePing : ModInitializer {
 //                val myParty = Cobblemon.storage.getParty(clientUuid)
 //                if (myParty.any { it.species.name == pokemon.species.name }) return@register
 
-                if (!cfg.species.contains(pokemonName)) return@register
+                if (!cfg.species.contains(pokemonName) || !pokemon.isWild()) return@register
 
                 val translatedName = pokemon.species.translatedName.string
                 //val message = "**${pokemon.species.translatedName.string}** bei ${round(pos.x)}, ${round(pos.y)}, ${round(pos.z)} gespawnt!"
@@ -71,6 +91,17 @@ object PokePing : ModInitializer {
                     }
                 }
             }
+        }
+
+        ServerLifecycleEvents.SERVER_STOPPED.register {
+            BiomeSpawns.shutdown()
+            shutdown()
+        }
+    }
+
+    fun ensureExecutor() {
+        if (executor.isShutdown || executor.isTerminated) {
+            executor = Executors.newSingleThreadExecutor()
         }
     }
 
@@ -149,5 +180,12 @@ object PokePing : ModInitializer {
     fun sendMessage(text: Text) {
         val mc = MinecraftClient.getInstance()
         mc.inGameHud?.chatHud?.addMessage(text)
+    }
+
+    fun shutdown() {
+        if (!executor.isShutdown) {
+            executor.shutdown()
+            executor.awaitTermination(2, TimeUnit.SECONDS)
+        }
     }
 }

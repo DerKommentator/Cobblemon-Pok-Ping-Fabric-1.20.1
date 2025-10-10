@@ -1,7 +1,7 @@
 {
   "schemaVersion": 1,
   "id": "pokeping",
-  "version": "1.0.3",
+  "version": "1.0.4",
   "name": "PokéPing",
   "description": "Notification of Pokémon spawns via chat and Discord",
   "authors": [

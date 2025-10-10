@@ -43,6 +43,46 @@ class PokePingMenu : ModMenuApi {
                     .build()
             )
 
+            val biomeCategory = builder.getOrCreateCategory(Text.translatable("${PokePing.MOD_ID}.config.biomeCategoryTitle"))
+
+            biomeCategory.addEntry(
+                entryBuilder.startBooleanToggle(Text.translatable("${PokePing.MOD_ID}.config.showBiomeSpawnTitle"), ConfigManager.config.biomeSpawn.enabled)
+                    .setDefaultValue(true)
+                    .setTooltip(Text.translatable("${PokePing.MOD_ID}.config.showBiomeSpawnTooltip"))
+                    .setSaveConsumer { localConfig.biomeSpawn.enabled = it }
+                    .build()
+            )
+
+            biomeCategory.addEntry(
+                entryBuilder.startEnumSelector(Text.translatable("${PokePing.MOD_ID}.config.biomeBucketMode"),
+                    BiomeBucketMode::class.java, ConfigManager.config.biomeSpawn.bucketMode)
+                    .setDefaultValue(BiomeBucketMode.ALL)
+                    .setSaveConsumer { newMode -> localConfig.biomeSpawn.bucketMode = newMode}
+                    .build()
+            )
+
+            biomeCategory.addEntry(
+                entryBuilder.startBooleanToggle(Text.translatable("${PokePing.MOD_ID}.config.showBiomeOverlay"), ConfigManager.config.biomeSpawn.modelsEnabled)
+                    .setDefaultValue(true)
+                    .setSaveConsumer { localConfig.biomeSpawn.modelsEnabled = it }
+                    .build()
+            )
+
+            biomeCategory.addEntry(
+                entryBuilder.startEnumSelector(Text.translatable("${PokePing.MOD_ID}.config.biomeOverlayPosition"),
+                    OverlayPosition::class.java, ConfigManager.config.biomeSpawn.overlayPosition)
+                    .setDefaultValue(OverlayPosition.TOP_LEFT)
+                    .setSaveConsumer { newPosition -> localConfig.biomeSpawn.overlayPosition = newPosition}
+                    .build()
+            )
+
+            biomeCategory.addEntry(
+                entryBuilder.startIntSlider(Text.translatable("${PokePing.MOD_ID}.config.maxPokemonDisplayed"), ConfigManager.config.biomeSpawn.maxPokemonDisplayed, 0, 6)
+                    .setDefaultValue(4)
+                    .setSaveConsumer { localConfig.biomeSpawn.maxPokemonDisplayed = it }
+                    .build()
+            )
+
             val discord = builder.getOrCreateCategory(Text.translatable("${PokePing.MOD_ID}.config.discordCategoryTitle"))
 
             discord.addEntry(
