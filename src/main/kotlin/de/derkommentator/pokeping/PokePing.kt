@@ -7,10 +7,12 @@ import de.derkommentator.pokeping.config.DiscordMessageMode
 import de.derkommentator.pokeping.config.PokePingConfig
 import de.derkommentator.pokeping.hud.HudOverlay
 import de.derkommentator.pokeping.spawning.BiomeSpawns
+import de.derkommentator.pokeping.spawning.BiomeSpawns.reloadAllSpawns
 import net.fabricmc.api.ModInitializer
+import net.fabricmc.fabric.api.client.event.lifecycle.v1.ClientEntityEvents
+import net.fabricmc.fabric.api.client.event.lifecycle.v1.ClientLifecycleEvents
+import net.fabricmc.fabric.api.client.event.lifecycle.v1.ClientTickEvents
 import net.fabricmc.fabric.api.client.rendering.v1.HudRenderCallback
-import net.fabricmc.fabric.api.event.lifecycle.v1.ServerEntityEvents
-import net.fabricmc.fabric.api.event.lifecycle.v1.ServerLifecycleEvents
 import net.fabricmc.fabric.api.event.lifecycle.v1.ServerTickEvents
 import net.minecraft.client.MinecraftClient
 import org.slf4j.LoggerFactory
@@ -33,21 +35,30 @@ object PokePing : ModInitializer {
         cfg = ConfigManager.config
         logger.info("Loaded Config: $cfg")
 
-        ServerLifecycleEvents.SERVER_STARTED.register {
+        ClientLifecycleEvents.CLIENT_STARTED.register {
             ensureExecutor()
             BiomeSpawns.register()
         }
 
         HudRenderCallback.EVENT.register(HudOverlay)
 
+        // On Dedicated Server
+        ClientTickEvents.END_CLIENT_TICK.register(ClientTickEvents.EndTick { client ->
+            if (!cfg.biomeSpawn.enabled && client.server != null) return@EndTick
+            BiomeSpawns.onDedicatedServerTick(client)
+        })
+
+        // On Singleplayer
         ServerTickEvents.END_SERVER_TICK.register { server ->
-            if (!cfg.biomeSpawn.enabled) return@register
+            if (!cfg.biomeSpawn.enabled && !server.isSingleplayer) return@register
             for (player in server.playerManager.playerList) {
-                BiomeSpawns.onPlayerTick(player, cfg.biomeSpawn.bucketMode)
+                BiomeSpawns.onSingleplayerTick(player, cfg.biomeSpawn.bucketMode)
             }
         }
 
-        ServerEntityEvents.ENTITY_LOAD.register { entity, _ ->
+
+
+        ClientEntityEvents.ENTITY_LOAD.register { entity, _ ->
             if (!cfg.modEnabled) return@register
 //            val clientUuid = MinecraftClient.getInstance().player?.uuid
 
@@ -93,7 +104,7 @@ object PokePing : ModInitializer {
             }
         }
 
-        ServerLifecycleEvents.SERVER_STOPPED.register {
+        ClientLifecycleEvents.CLIENT_STOPPING.register {
             BiomeSpawns.shutdown()
             shutdown()
         }
@@ -109,6 +120,7 @@ object PokePing : ModInitializer {
         ConfigManager.load()
         logger.info("Reloaded Config!")
         cfg = ConfigManager.config
+        reloadAllSpawns()
         sendMessage(Text.translatable("$MOD_ID.notification.reloadedConfig"))
     }
 

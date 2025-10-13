@@ -8,11 +8,6 @@ import me.shedaniel.clothconfig2.api.ConfigBuilder
 import net.minecraft.client.gui.screen.Screen
 import net.minecraft.text.Text
 
-enum class DiscordMessageMode(name: String) {
-    Text("Text"),
-    Embed("Embed"),
-}
-
 class PokePingMenu : ModMenuApi {
     override fun getModConfigScreenFactory(): ConfigScreenFactory<*> {
         return ConfigScreenFactory { parent: Screen ->
@@ -47,7 +42,7 @@ class PokePingMenu : ModMenuApi {
 
             biomeCategory.addEntry(
                 entryBuilder.startBooleanToggle(Text.translatable("${PokePing.MOD_ID}.config.showBiomeSpawnTitle"), ConfigManager.config.biomeSpawn.enabled)
-                    .setDefaultValue(true)
+                    .setDefaultValue(false)
                     .setTooltip(Text.translatable("${PokePing.MOD_ID}.config.showBiomeSpawnTooltip"))
                     .setSaveConsumer { localConfig.biomeSpawn.enabled = it }
                     .build()

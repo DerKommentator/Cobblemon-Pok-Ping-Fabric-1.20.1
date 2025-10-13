@@ -1,15 +1,15 @@
 {
   "schemaVersion": 1,
   "id": "pokeping",
-  "version": "1.0.4",
+  "version": "1.0.5",
   "name": "PokéPing",
-  "description": "Notification of Pokémon spawns via chat and Discord",
+  "description": "Receive notifications when specific Pokémon spawn, with Discord webhook support and in-game chat messages",
   "authors": [
     "DerKommentator"
   ],
   "contact": {
     "homepage": "https://github.com/DerKommentator",
-    "sources": "https://github.com/DerKommentator/Cobblemon-Pok-Ping-Fabric-1.20.1"
+    "sources": "https://github.com/DerKommentator/Cobblemon-PokePing-Fabric-1.20.1"
   },
   "license": "MIT",
   "icon": "assets/pokeping/icon.png",
