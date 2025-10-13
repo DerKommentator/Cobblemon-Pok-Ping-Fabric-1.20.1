@@ -18,6 +18,11 @@ enum class OverlayPosition {
     BOTTOM_RIGHT
 }
 
+enum class DiscordMessageMode(name: String) {
+    Text("Text"),
+    Embed("Embed"),
+}
+
 data class DiscordConfig(
     var enabled: Boolean = false,
     var webhookUrl: String = "",
@@ -34,7 +39,7 @@ data class PokePingConfig(
 )
 
 data class PokePingBiomeSpawns(
-    var enabled: Boolean = true,
+    var enabled: Boolean = false,
     var modelsEnabled: Boolean = true,
     var bucketMode: BiomeBucketMode = BiomeBucketMode.ALL,
     var overlayPosition: OverlayPosition = OverlayPosition.TOP_LEFT,

@@ -11,41 +11,136 @@ import com.cobblemon.mod.common.pokemon.Species
 import de.derkommentator.pokeping.config.BiomeBucketMode
 import de.derkommentator.pokeping.config.ConfigManager
 import de.derkommentator.pokeping.hud.HudOverlay
-import net.fabricmc.fabric.api.entity.event.v1.ServerPlayerEvents
+import net.minecraft.client.MinecraftClient
+import net.minecraft.registry.RegistryKeys
+import net.minecraft.registry.tag.TagKey
 import net.minecraft.server.network.ServerPlayerEntity
 import net.minecraft.server.world.ServerWorld
+import net.minecraft.util.Identifier
+import net.minecraft.util.math.BlockPos
 import net.minecraft.util.math.MathHelper
+import net.minecraft.world.World
 import org.slf4j.LoggerFactory
+import java.util.Locale
 import java.util.UUID
 import java.util.concurrent.ConcurrentHashMap
 import java.util.concurrent.Executors
 import java.util.concurrent.TimeUnit
+import kotlin.collections.component1
+import kotlin.collections.component2
 
 object BiomeSpawns {
     private val logger = LoggerFactory.getLogger("PokePing")
+    private var lastBiome = ""
     private val lastBiomeForPlayer = ConcurrentHashMap<UUID, String>()
     private var executor = Executors.newSingleThreadExecutor()
     private val ALL_BUCKETS = listOf(BiomeBucketMode.COMMON, BiomeBucketMode.UNCOMMON, BiomeBucketMode.RARE, BiomeBucketMode.ULTRARARE)
+    private var allSpawns: List<CobblemonSpawnDataLoader.SpawnPoolData> = CobblemonSpawnDataLoader.spawnPools
 
     private val speciesCache: Map<String, Species> by lazy {
         PokemonSpecies.implemented.associateBy { it.name.lowercase() }
     }
 
-    private val lastQueryTime = ConcurrentHashMap<UUID, Long>()
-    private const val MIN_QUERY_INTERVAL_MS = 5000L // 5 seconds
+    private var lastQueryTime : Long = 0
+    private val lastQueryTimeMap = ConcurrentHashMap<UUID, Long>()
+    private const val UPDATE_INTERVAL_MS = 5000L // 5 seconds
 
     fun register() {
         if (executor.isShutdown || executor.isTerminated) {
             executor = Executors.newSingleThreadExecutor()
         }
-
-        ServerPlayerEvents.AFTER_RESPAWN.register(ServerPlayerEvents.AfterRespawn { _, newPlayer, _ ->
-            lastBiomeForPlayer.remove(newPlayer.uuid)
-            lastQueryTime.remove(newPlayer.uuid)
-        })
     }
 
-    fun onPlayerTick(player: ServerPlayerEntity, biomeBucketMode: BiomeBucketMode) {
+    fun biomeHasTag(world: World, pos: BlockPos, tagString: String): Boolean {
+        val raw = tagString.removePrefix("#")
+        val id = Identifier(raw.lowercase(Locale.ROOT))
+        val tagKey = TagKey.of(RegistryKeys.BIOME, id)
+
+        // world.getBiome(pos) liefert ein RegistryEntry<Biome> / Holder<Biome> mit isIn(...)
+        val biomeEntry = world.getBiome(pos)
+        return biomeEntry.isIn(tagKey)
+    }
+
+    fun biomeMatchesAnyTag(world: World, pos: BlockPos, tagStrings: List<String>): Boolean {
+        val biomeEntry = world.getBiome(pos)
+        return tagStrings.any { rawTag ->
+            val id = Identifier(rawTag.removePrefix("#").lowercase(Locale.ROOT))
+            val tagKey = TagKey.of(RegistryKeys.BIOME, id)
+            biomeEntry.isIn(tagKey)
+        }
+    }
+
+    fun onDedicatedServerTick(client: MinecraftClient) {
+        val player = client.player ?: return
+        val world = player.world ?: return
+
+        val currentBiome = world.getBiome(player.blockPos).key.get().value.toString()
+        val currentTime = System.currentTimeMillis()
+
+        if (currentBiome == lastBiome && (currentTime - lastQueryTime < UPDATE_INTERVAL_MS)) return
+
+        lastBiome = currentBiome
+        lastQueryTime = currentTime
+
+        // HUD asynchron updaten
+        executor.execute {
+            try {
+//                val possible = allSpawns.flatMap { pool ->
+//                    pool.entries.filter { biomeId ->
+//                        biomeId.biomes.any { b -> b == currentBiome || b.endsWith(currentBiome.substringAfterLast(":")) }
+//                    }.map { it to pool.bucket }
+//                }
+
+                if (allSpawns.isEmpty()) {
+                    HudOverlay.updateDisplay(emptyList(), currentBiome)
+                    return@execute
+                }
+
+                val displayEntries = allSpawns.flatMap { group ->
+                    val bucketWeight = BiomeBucketMode.entries.find { it.value == group.bucket }?.bucketPercentage ?: 0f
+
+                    group.entries
+                        .filter { spawn ->
+                            val biomeMatch = biomeMatchesAnyTag(world, player.blockPos, spawn.biomes)
+                            //logger.info("Tag: $biomeMatch ${spawn.biomes} ${spawn.name} $currentBiome")
+                            biomeMatch
+                        }
+                        .map { spawn ->
+                            val displayName = spawn.name.replaceFirstChar { it.uppercase() }
+
+                            HudOverlay.PokemonDisplayEntry(
+                                resourceIdentifier = Identifier("cobblemon", spawn.name),
+                                aspects = emptySet(),
+                                name = displayName,
+                                spawnChance = (spawn.weight / 100f) * bucketWeight,
+                                translatedName = displayName
+                            )
+                        }
+                }.distinctBy { it.name }
+                .sortedByDescending { it.spawnChance }
+
+                HudOverlay.updateDisplay(displayEntries, currentBiome)
+                logger.info("HUD updated for biome $currentBiome with ${displayEntries.size} Pokémon")
+
+            } catch (e: Exception) {
+                logger.error("Failed to update Client Biome", e)
+            }
+        }
+    }
+
+    fun reloadAllSpawns() {
+        allSpawns = CobblemonSpawnDataLoader.spawnPools
+            .map { pool ->
+                pool.copy(
+                    entries = pool.entries.filter { spawn ->
+                        ConfigManager.config.species.contains(spawn.name)
+                    }
+                )
+            }
+            .filter { it.entries.isNotEmpty() }
+    }
+
+    fun onSingleplayerTick(player: ServerPlayerEntity, biomeBucketMode: BiomeBucketMode) {
         val uuid = player.uuid
         val world = player.world as? ServerWorld ?: return
 
@@ -54,11 +149,11 @@ object BiomeSpawns {
 
         // prevent spamming (only update if biome changes or 5 seconds have passed)
         if (biomeKey == lastBiomeForPlayer[uuid] &&
-            (currentTime - (lastQueryTime[uuid] ?: 0L)) < MIN_QUERY_INTERVAL_MS
+            (currentTime - (lastQueryTimeMap[uuid] ?: 0L)) < UPDATE_INTERVAL_MS
         ) return
 
         lastBiomeForPlayer[uuid] = biomeKey
-        lastQueryTime[uuid] = currentTime
+        lastQueryTimeMap[uuid] = currentTime
 
         executor.execute {
             try {
