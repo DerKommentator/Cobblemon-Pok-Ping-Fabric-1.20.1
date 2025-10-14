@@ -44,13 +44,13 @@ object PokePing : ModInitializer {
 
         // On Dedicated Server
         ClientTickEvents.END_CLIENT_TICK.register(ClientTickEvents.EndTick { client ->
-            if (!cfg.biomeSpawn.enabled && client.server != null) return@EndTick
+            if (!cfg.biomeSpawn.enabled || client.server != null) return@EndTick
             BiomeSpawns.onDedicatedServerTick(client)
         })
 
         // On Singleplayer
         ServerTickEvents.END_SERVER_TICK.register { server ->
-            if (!cfg.biomeSpawn.enabled && !server.isSingleplayer) return@register
+            if (!cfg.biomeSpawn.enabled || !server.isSingleplayer) return@register
             for (player in server.playerManager.playerList) {
                 BiomeSpawns.onSingleplayerTick(player, cfg.biomeSpawn.bucketMode)
             }
@@ -59,7 +59,7 @@ object PokePing : ModInitializer {
 
 
         ClientEntityEvents.ENTITY_LOAD.register { entity, _ ->
-            if (!cfg.modEnabled) return@register
+            if (!cfg.notificationEnabled) return@register
 //            val clientUuid = MinecraftClient.getInstance().player?.uuid
 
             if (entity is PokemonEntity) {

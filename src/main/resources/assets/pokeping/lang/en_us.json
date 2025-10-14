@@ -7,7 +7,7 @@
 
     "pokeping.config.title": "PokéPing Config",
     "pokeping.config.generalCategoryTitle": "General",
-    "pokeping.config.modEnabled": "Mod enabled",
+    "pokeping.config.modEnabled": "Notification enabled",
     "pokeping.config.pokemonList": "Pokémon List",
 
     "pokeping.config.biomeCategoryTitle": "Biome Spawns",

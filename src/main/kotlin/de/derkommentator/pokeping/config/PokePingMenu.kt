@@ -21,9 +21,9 @@ class PokePingMenu : ModMenuApi {
             val general = builder.getOrCreateCategory(Text.translatable("${PokePing.MOD_ID}.config.generalCategoryTitle"))
 
             general.addEntry(
-                entryBuilder.startBooleanToggle(Text.translatable("${PokePing.MOD_ID}.config.modEnabled"), ConfigManager.config.modEnabled)
+                entryBuilder.startBooleanToggle(Text.translatable("${PokePing.MOD_ID}.config.modEnabled"), ConfigManager.config.notificationEnabled)
                     .setDefaultValue(true)
-                    .setSaveConsumer { newIsModEnabled -> localConfig.modEnabled = newIsModEnabled}
+                    .setSaveConsumer { newIsModEnabled -> localConfig.notificationEnabled = newIsModEnabled}
                     .build()
             )
 

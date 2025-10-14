@@ -31,7 +31,7 @@ data class DiscordConfig(
 )
 
 data class PokePingConfig(
-    var modEnabled: Boolean = true,
+    var notificationEnabled: Boolean = true,
     var species: List<String> = listOf(),
     val announceOnce: Boolean = true,
     var discord: DiscordConfig = DiscordConfig(),

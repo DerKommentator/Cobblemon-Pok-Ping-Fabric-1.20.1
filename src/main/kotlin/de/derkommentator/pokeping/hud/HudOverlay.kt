@@ -28,7 +28,6 @@ object HudOverlay : HudRenderCallback {
     private val displayEntries = CopyOnWriteArrayList<PokemonDisplayEntry>()
     private val logger = LoggerFactory.getLogger("PokePing")
     @Volatile private var lastBiome: String = ""
-    val cfg = ConfigManager.config
     private const val ENTRY_DISTANCE: Int = 20
 
     data class PokemonDisplayEntry(
@@ -52,14 +51,14 @@ object HudOverlay : HudRenderCallback {
     override fun onHudRender(context: DrawContext, tickDelta: Float) {
         val mc = MinecraftClient.getInstance() ?: return
 
-        if (!cfg.biomeSpawn.enabled || mc.player == null) return
+        if (!ConfigManager.config.biomeSpawn.enabled || mc.player == null) return
 
         val startX: Int
         val startY: Int
         val width = mc.window.scaledWidth
         val height = mc.window.scaledHeight
 
-        when (cfg.biomeSpawn.overlayPosition) {
+        when (ConfigManager.config.biomeSpawn.overlayPosition) {
             OverlayPosition.TOP_LEFT -> {
                 startX = 20; startY = 20
             }
@@ -97,7 +96,7 @@ object HudOverlay : HudRenderCallback {
     private fun drawPokemonEntry(context: DrawContext, entry: PokemonDisplayEntry, tickDelta: Float, x: Int, y: Int) {
         val client = MinecraftClient.getInstance() ?: return
 
-        if (cfg.biomeSpawn.modelsEnabled) {
+        if (ConfigManager.config.biomeSpawn.modelsEnabled) {
             val rotation = Quaternionf().fromEulerXYZDegrees(Vector3f(10f, 340f, 0F))
             val matrixStack = context.matrices
 
@@ -130,7 +129,7 @@ object HudOverlay : HudRenderCallback {
                 entry.translatedName,
                 df.format((entry.spawnChance))
             ),
-            if (cfg.biomeSpawn.modelsEnabled) (x + 40) else x,
+            if (ConfigManager.config.biomeSpawn.modelsEnabled) (x + 40) else x,
             y + 30,
             0xFFFFFF,
             true
