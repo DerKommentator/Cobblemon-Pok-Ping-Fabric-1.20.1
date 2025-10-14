@@ -54,7 +54,7 @@ object CobblemonSpawnDataLoader {
                                     //if (!ConfigManager.config.species.contains(pokemonName)) return@mapNotNull null
 
                                     SpawnPoolData.SpeciesSpawn(pokemonName, bucket, weight, biomes)
-                                }.distinctBy { it.name }
+                                }.distinctBy { it.name }.take(ConfigManager.config.biomeSpawn.maxPokemonDisplayed)
 
                                 if (spawnEntries.isNotEmpty())
                                     results.add(SpawnPoolData(bucket, spawnEntries))
